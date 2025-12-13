@@ -1,0 +1,222 @@
+#include<iostream>
+#include<vector>
+#include<string>
+using namespace std;
+class location{
+public:
+    string name;
+    double distance;
+};
+void addEdge(vector<vector<location>> &adj,int u,int v,string vname,double weight) {
+    location temp;
+    temp.name = vname;
+    temp.distance = weight;
+    adj[u].push_back(temp);
+}
+void dijkstra(vector<vector<location>> &adj,vector<string> &names,int src,int dest){
+    int n=adj.size();
+    vector<double> dist(n,1e9);
+    vector<int> parent(n,-1);
+    vector<bool> visited(n,false);
+    dist[src]=0;
+    for(int i=0;i<n;i++){
+        int u=-1;
+        double minDist=1e9;
+        for(int j=0;j<n;j++){
+            if(!visited[j]&&dist[j]<minDist){
+                minDist=dist[j];
+                u=j;
+            }
+        }
+        if(u==-1) break;
+        visited[u]=true;
+        for(int k=0;k<adj[u].size();k++){
+            string vName=adj[u][k].name;
+            double w=adj[u][k].distance;
+            int v=-1;
+            for(int x=0;x<names.size();x++){
+                if(names[x]==vName){
+                    v=x;
+                    break;
+                }
+            }
+            if(v!=-1&&!visited[v]){
+                if(dist[u]+w<dist[v]){
+                    dist[v]=dist[u]+w;
+                    parent[v]=u;
+                }
+            }
+        }
+    }
+    if(dist[dest]==1e9){
+        cout<<"No path exists\n";
+        return;
+    }
+    cout<<"Shortest distance: "<<dist[dest]<<endl;
+    cout<<"Path: ";
+    vector<int> path;
+    for(int v=dest;v!=-1;v=parent[v])
+        path.push_back(v);
+    for(int i=path.size()-1;i>=0;i--){
+        cout<<names[path[i]];
+        if(i!=0)cout<<" -> ";
+    }
+    cout<<endl;
+}
+void printGraph(vector<vector<location>> &adj,vector<string> &names){
+    for(int i=0;i<adj.size();i++){
+        cout<<names[i]<<" -> ";
+        for(int j = 0;j<adj[i].size();j++){
+            cout<<"("<<adj[i][j].name<<", "<<adj[i][j].distance<<") ";
+        }
+        cout<<endl;
+    }
+}
+int main(){
+    vector<string>names={
+        "hostel 10",//0
+        "hostel 9",//1
+        "hostel 1",//2
+        "gym",//3
+        "sports complex",//4
+        "futsal",//5
+        "circket ground",//6
+        "hostel 2",//7
+        "mosque",//8
+        "admin block",//9
+        "gate",//10
+        "mess",//11
+        "hostel 5",//12
+        "FBS",//13
+        "hostel 4",//14
+        "hostel 3",//15
+        "hostel 8",//16
+        "hostel 11",//17
+        "hostel 12",//18
+        "ACB",//19
+        "library",//20
+        "auditorium",//21
+        "FEE",//22
+        "FME",//23
+        "logic",//24
+        "ATM",//25
+        "FMCE",//26
+        "Tuc",//27
+        "brabers",//28
+        "medical center",//29
+        "incubation center",//30
+        "hostel 7",//31
+        "hostel 13",//32
+        "faculty club"//33
+    };
+    vector<vector<location>> adj(34); //make map from here
+    addEdge(adj,0,1,"hostel 9",3);
+    addEdge(adj,0,2,"hostel 1",2);
+    addEdge(adj,0,3,"gym",2.5);
+    addEdge(adj,1,0,"hostel 10",2.5);
+    addEdge(adj,2,0,"hostel 10",2);
+    addEdge(adj,3,0,"hostel 10",2.5);
+    addEdge(adj,3,4,"sports complex",1);
+    addEdge(adj,4,3,"gym",1);
+    addEdge(adj,3,5,"futsal",1.5);
+    addEdge(adj,5,3,"gym",1.5);
+    addEdge(adj,5,1,"hostel 9",1);
+    addEdge(adj,1,5,"futsal",1);
+    addEdge(adj,5,6,"circket ground",1);
+    addEdge(adj,6,5,"futsal",1);
+    addEdge(adj,1,6,"circket ground",1);
+    addEdge(adj,6,1,"hostel 9",1);
+    addEdge(adj,1,7,"hostel 2",2);
+    addEdge(adj,7,1,"hostel 9",2);
+    addEdge(adj,7,2,"hostel 1",1);
+    addEdge(adj,2,7,"hostel 2",1);
+    addEdge(adj,7,8,"mosque",2);
+    addEdge(adj,8,7,"hostel 2",2);
+    addEdge(adj,8,6,"circket ground",3);
+    addEdge(adj,6,8,"mosque",3);
+    addEdge(adj,6,9,"admin block",4);
+    addEdge(adj,9,6,"circket ground",4);
+    addEdge(adj,10,9,"gate",1);
+    addEdge(adj,9,10,"admin block",1);
+    addEdge(adj,8,11,"mess",1.5);
+    addEdge(adj,11,8,"mosque",1.5);
+    addEdge(adj,11,12,"hostel 5",2.5);
+    addEdge(adj,12,11,"mess",2.5);
+    addEdge(adj,11,13,"FBS",1);
+    addEdge(adj,13,11,"mess",1);
+    addEdge(adj,12,14,"hostel 4",1);
+    addEdge(adj,14,12,"hostel 5",1);
+    addEdge(adj,14,15,"hostel 3",2);
+    addEdge(adj,15,14,"hostel 4",2);
+    addEdge(adj,15,16,"hostel 8",3);
+    addEdge(adj,16,15,"hostel 3",3);
+    addEdge(adj,16,11,"mess",3);
+    addEdge(adj,11,16,"hostel 8",3);
+    addEdge(adj,16,17,"hostel 11",4);
+    addEdge(adj,17,16,"hostel 8",4);
+    addEdge(adj,17,15,"hostel 3",4.5);
+    addEdge(adj,15,17,"hostel 11",4.5);
+    addEdge(adj,17,18,"hostel 12",2);
+    addEdge(adj,18,17,"hostel 11",2);
+    addEdge(adj,18,16,"hostel 8",3);
+    addEdge(adj,16,18,"hostel 12",3);
+    addEdge(adj,16,13,"FBS",3.5);
+    addEdge(adj,13,16,"hostel 8",3.5);
+    addEdge(adj,16,19,"ACB",2);
+    addEdge(adj,19,16,"hostel 8",2);
+    addEdge(adj,18,19,"ACB",5);
+    addEdge(adj,19,18,"hostel 12",5);
+    addEdge(adj,19,13,"FBS",2);
+    addEdge(adj,13,19,"ACB",2);
+    addEdge(adj,20,19,"ACB",5.5);
+    addEdge(adj,19,20,"library",5.5);
+    addEdge(adj,19,21,"auditorium",3);
+    addEdge(adj,21,19,"ACB",3);
+    addEdge(adj,22,21,"auditorium",2.5);
+    addEdge(adj,21,22,"FEE",2.5);
+    addEdge(adj,22,13,"FBS",2);
+    addEdge(adj,13,22,"FEE",2);
+    addEdge(adj,22,9,"admin block",1.5);
+    addEdge(adj,9,22,"FEE",1.5);
+    addEdge(adj,22,23,"FME",2.2);
+    addEdge(adj,23,22,"FEE",2.2);
+    addEdge(adj,9,24,"logic",1.2);
+    addEdge(adj,24,9,"gate",1.2);
+    addEdge(adj,21,23,"FME",1.7);
+    addEdge(adj,23,21,"auditorium",1.7);
+    addEdge(adj,24,25,"ATM",3.1);
+    addEdge(adj,25,24,"logic",3.1);
+    addEdge(adj,25,26,"FMCE",3.7);
+    addEdge(adj,26,25,"ATM",3.7);
+    addEdge(adj,26,23,"FME",2.9);
+    addEdge(adj,23,26,"FMCE",2.9);
+    addEdge(adj,26,21,"auditorium",3.3);
+    addEdge(adj,21,26,"FMCE",3.3);
+    addEdge(adj,27,25,"ATM",3.1);
+    addEdge(adj,25,27,"Tuc",3.1);
+    addEdge(adj,20,28,"brabers",2.8);
+    addEdge(adj,28,20,"library",2.8);
+    addEdge(adj,28,26,"FMCE",2.3);
+    addEdge(adj,26,28,"brabers",2.3);
+    addEdge(adj,27,29,"medical center",3.4);
+    addEdge(adj,29,27,"Tuc",3.4);
+    addEdge(adj,28,30,"incubation center",0.6);
+    addEdge(adj,30,28,"brabers",0.6);
+    addEdge(adj,30,29,"medical center",1.4);
+    addEdge(adj,29,30,"incubation center",1.4);
+    addEdge(adj,29,31,"hostel 7",0.4);
+    addEdge(adj,31,29,"medical center",0.4);
+    addEdge(adj,29,32,"hostel 13",1.7);
+    addEdge(adj,32,29,"medical center",1.7);
+    addEdge(adj,32,33,"faculty club",4);
+    addEdge(adj,33,32,"hostel 13",4);
+    int source;
+    int destination; 
+    cout<<"enter starting location(0-33): ";
+    cin>>source;
+    cout<<"enter ending location(0-33): ";
+    cin>>destination;
+    dijkstra(adj, names, source, destination);
+    printGraph(adj,names);
+    return 0;
+}
