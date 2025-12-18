@@ -1,0 +1,352 @@
+#include<iostream>
+#include<vector>
+#include<string>
+#include<fstream>
+using namespace std;
+
+class Node {
+public:
+    string data;
+    int id;
+    Node* left;
+    Node* right;
+    int height;
+    Node(string value,int index) {
+        data = value;
+        id=index;
+        left = right = NULL;
+        height = 1;
+    }
+};
+int getHeight(Node* n) {
+    if (n == NULL) return 0;
+    return n->height;
+}
+int getBalance(Node* n) {
+    if (n == NULL) return 0;
+    return getHeight(n->left) - getHeight(n->right);
+}
+Node* rightRotate(Node* y) {
+    Node* x = y->left;
+    Node* T2 = x->right;
+    x->right = y;
+    y->left = T2;
+    y->height = 1 + max(getHeight(y->left), getHeight(y->right));
+    x->height = 1 + max(getHeight(x->left), getHeight(x->right));
+    return x; 
+}
+Node* leftRotate(Node* x) {
+    Node* y = x->right;
+    Node* T2 = y->left;
+    y->left = x;
+    x->right = T2;
+    x->height = 1 + max(getHeight(x->left), getHeight(x->right));
+    y->height = 1 + max(getHeight(y->left), getHeight(y->right));
+    return y;
+}
+Node* insert(Node* root, string value,int index) {
+    if (root == NULL) return new Node(value,index);
+    if (value < root->data)
+        root->left = insert(root->left, value,index);
+    else if (value > root->data)
+        root->right = insert(root->right, value,index);
+    else
+        return root;
+    root->height = 1 + max(getHeight(root->left), getHeight(root->right));
+    int balance = getBalance(root);
+    if (balance > 1 && value < root->left->data)
+        return rightRotate(root);
+    if (balance < -1 && value > root->right->data)
+        return leftRotate(root);
+    if (balance > 1 && value > root->left->data) {
+        root->left = leftRotate(root->left);
+        return rightRotate(root);
+    }
+    if (balance < -1 && value < root->right->data) {
+        root->right = rightRotate(root->right);
+        return leftRotate(root);
+    }
+    return root;
+}
+Node* findMin(Node* root) {
+    while (root->left != NULL)
+        root = root->left;
+    return root;
+}
+void printNodeChildren(Node* root, int level) {
+    if (root == NULL)
+        return;
+    if (level == 1) {
+        cout << "Node " << root->data << " = ";
+        if(root->left != NULL){
+            cout<<" left child "<<root->left->data<<",";
+        }else{
+            cout<<" left = null , ";
+        }
+        if(root->right != NULL){
+            cout<<" right child "<<root->right->data;
+        }else{
+        	cout<<" right = null ";
+        }
+        cout << endl; 
+    }
+    else if (level > 1) {
+        printNodeChildren(root->left, level - 1);
+        printNodeChildren(root->right, level - 1);
+    }
+}
+void printLevelOrder(Node* root) {
+    int h = getHeight(root);
+    cout << "--- Visual Tree Structure (showing each root left child and right child for each subnote of the level of tree) " << endl;
+    for (int i = 1; i <= h; i++) {
+        printNodeChildren(root, i);
+        cout << endl; 
+    }
+    cout<<endl;
+}
+class location{
+public:
+    string name;
+    double distance;
+};
+void addEdge(vector<vector<location> > &adj,int u,int v,string vname,double weight) {
+    location temp;
+    temp.name = vname;
+    temp.distance = weight;
+    adj[u].push_back(temp);
+}
+int j=0;
+void dijkstra(vector<vector<location> > &adj,vector<string> &names,int src,int dest){
+    int n=adj.size();
+    vector<double> dist(n,1e9);
+    vector<int> parent(n,-1);
+    vector<bool> visited(n,false);
+    dist[src]=0;
+    for(int i=0;i<n;i++){
+        int u=-1;
+        double minDist=1e9;
+        for(int j=0;j<n;j++){
+            if(!visited[j]&&dist[j]<minDist){
+                minDist=dist[j];
+                u=j;
+            }
+        }
+        if(u==-1) break;
+        visited[u]=true;
+        for(int k=0;k<adj[u].size();k++){
+            string vName=adj[u][k].name;
+            double w=adj[u][k].distance;
+            int v=-1;
+            for(int x=0;x<names.size();x++){
+                if(names[x]==vName){
+                    v=x;
+                    break;
+                }
+            }
+            if(v!=-1&&!visited[v]){
+                if(dist[u]+w<dist[v]){
+                    dist[v]=dist[u]+w;
+                    parent[v]=u;
+                }
+            }
+        }
+    }
+    if(dist[dest]==1e9){
+        cout<<"No path exists\n";
+        return;
+    }
+    fstream fout("data.txt",ios::app);
+    if(!fout){
+    	cout<<"cannot open file"<<endl;
+	}else{
+        fout<<names[src]<<" "<<names[dest]<<" "<< dist[dest]<<endl;
+        fout.close();
+	}
+    cout<<"Shortest distance: "<<dist[dest]<<endl;
+    cout<<"Path: ";
+    vector<int> path;
+    for(int v=dest;v!=-1;v=parent[v])
+        path.push_back(v);
+    for(int i=path.size()-1;i>=0;i--){
+        cout<<names[path[i]];
+        if(i!=0)cout<<" -> ";
+    }
+    cout<<endl;
+}
+void printGraph(vector<vector<location> > &adj,vector<string> &names){
+    for(int i=0;i<adj.size();i++){
+        cout<<names[i]<<" -> ";
+        for(int j = 0;j<adj[i].size();j++){
+            cout<<"("<<adj[i][j].name<<", "<<adj[i][j].distance<<") ";
+        }
+        cout<<endl;
+    }
+}
+int main(){
+      vector<string> names;
+
+    names.push_back("hostel_10");      // 0
+    names.push_back("hostel_9");       // 1
+    names.push_back("hostel_1");       // 2
+    names.push_back("gym");            // 3
+    names.push_back("sports_complex"); // 4
+    names.push_back("futsal");         // 5
+    names.push_back("circket_ground"); // 6
+    names.push_back("hostel_2");       // 7
+    names.push_back("mosque");         // 8
+    names.push_back("admin_block");    // 9
+    names.push_back("gate");           // 10
+    names.push_back("mess");           // 11
+    names.push_back("hostel_5");       // 12
+    names.push_back("FBS");            // 13
+    names.push_back("hostel_4");       // 14
+    names.push_back("hostel_3");       // 15
+    names.push_back("hostel_8");       // 16
+    names.push_back("hostel_11");      // 17
+    names.push_back("hostel_12");      // 18
+    names.push_back("ACB");            // 19
+    names.push_back("library");        // 20
+    names.push_back("auditorium");     // 21
+    names.push_back("FEE");            // 22
+    names.push_back("FME");            // 23
+    names.push_back("logic");          // 24
+    names.push_back("ATM");            // 25
+    names.push_back("FMCE");           // 26
+    names.push_back("Tuc");            // 27
+    names.push_back("brabers");        // 28
+    names.push_back("medical_center");// 29
+    names.push_back("incubation_center");// 30
+    names.push_back("hostel_7");       // 31
+    names.push_back("hostel_13");      // 32
+    names.push_back("faculty_club");   // 33
+    vector<vector<location> > adj(34); //make map from here
+    addEdge(adj,0,1,"hostel_9",3);
+    addEdge(adj,0,2,"hostel_1",2);
+    addEdge(adj,0,3,"gym",2.5);
+    addEdge(adj,1,0,"hostel_10",2.5);
+    addEdge(adj,2,0,"hostel_10",2);
+    addEdge(adj,3,0,"hostel_10",2.5);
+    addEdge(adj,3,4,"sports_complex",1);
+    addEdge(adj,4,3,"gym",1);
+    addEdge(adj,3,5,"futsal",1.5);
+    addEdge(adj,5,3,"gym",1.5);
+    addEdge(adj,5,1,"hostel_9",1);
+    addEdge(adj,1,5,"futsal",1);
+    addEdge(adj,5,6,"circket_ground",1);
+    addEdge(adj,6,5,"futsal",1);
+    addEdge(adj,1,6,"circket_ground",1);
+    addEdge(adj,6,1,"hostel_9",1);
+    addEdge(adj,1,7,"hostel_2",2);
+    addEdge(adj,7,1,"hostel_9",2);
+    addEdge(adj,7,2,"hostel_1",1);
+    addEdge(adj,2,7,"hostel_2",1);
+    addEdge(adj,7,8,"mosque",2);
+    addEdge(adj,8,7,"hostel_2",2);
+    addEdge(adj,8,6,"circket_ground",3);
+    addEdge(adj,6,8,"mosque",3);
+    addEdge(adj,6,9,"admin_block",4);
+    addEdge(adj,9,6,"circket_ground",4);
+    addEdge(adj,10,9,"gate",1);
+    addEdge(adj,9,10,"admin_block",1);
+    addEdge(adj,8,11,"mess",1.5);
+    addEdge(adj,11,8,"mosque",1.5);
+    addEdge(adj,11,12,"hostel_5",2.5);
+    addEdge(adj,12,11,"mess",2.5);
+    addEdge(adj,11,13,"FBS",1);
+    addEdge(adj,13,11,"mess",1);
+    addEdge(adj,12,14,"hostel_4",1);
+    addEdge(adj,14,12,"hostel_5",1);
+    addEdge(adj,14,15,"hostel_3",2);
+    addEdge(adj,15,14,"hostel_4",2);
+    addEdge(adj,15,16,"hostel_8",3);
+    addEdge(adj,16,15,"hostel_3",3);
+    addEdge(adj,16,11,"mess",3);
+    addEdge(adj,11,16,"hostel_8",3);
+    addEdge(adj,16,17,"hostel_11",4);
+    addEdge(adj,17,16,"hostel_8",4);
+    addEdge(adj,17,15,"hostel_3",4.5);
+    addEdge(adj,15,17,"hostel_11",4.5);
+    addEdge(adj,17,18,"hostel_12",2);
+    addEdge(adj,18,17,"hostel_11",2);
+    addEdge(adj,18,16,"hostel_8",3);
+    addEdge(adj,16,18,"hostel_12",3);
+    addEdge(adj,16,13,"FBS",3.5);
+    addEdge(adj,13,16,"hostel_8",3.5);
+    addEdge(adj,16,19,"ACB",2);
+    addEdge(adj,19,16,"hostel_8",2);
+    addEdge(adj,18,19,"ACB",5);
+    addEdge(adj,19,18,"hostel_12",5);
+    addEdge(adj,19,13,"FBS",2);
+    addEdge(adj,13,19,"ACB",2);
+    addEdge(adj,20,19,"ACB",5.5);
+    addEdge(adj,19,20,"library",5.5);
+    addEdge(adj,19,21,"auditorium",3);
+    addEdge(adj,21,19,"ACB",3);
+    addEdge(adj,22,21,"auditorium",2.5);
+    addEdge(adj,21,22,"FEE",2.5);
+    addEdge(adj,22,13,"FBS",2);
+    addEdge(adj,13,22,"FEE",2);
+    addEdge(adj,22,9,"admin_block",1.5);
+    addEdge(adj,9,22,"FEE",1.5);
+    addEdge(adj,22,23,"FME",2.2);
+    addEdge(adj,23,22,"FEE",2.2);
+    addEdge(adj,9,24,"logic",1.2);
+    addEdge(adj,24,9,"gate",1.2);
+    addEdge(adj,21,23,"FME",1.7);
+    addEdge(adj,23,21,"auditorium",1.7);
+    addEdge(adj,24,25,"ATM",3.1);
+    addEdge(adj,25,24,"logic",3.1);
+    addEdge(adj,25,26,"FMCE",3.7);
+    addEdge(adj,26,25,"ATM",3.7);
+    addEdge(adj,26,23,"FME",2.9);
+    addEdge(adj,23,26,"FMCE",2.9);
+    addEdge(adj,26,21,"auditorium",3.3);
+    addEdge(adj,21,26,"FMCE",3.3);
+    addEdge(adj,27,25,"ATM",3.1);
+    addEdge(adj,25,27,"Tuc",3.1);
+    addEdge(adj,20,28,"brabers",2.8);
+    addEdge(adj,28,20,"library",2.8);
+    addEdge(adj,28,26,"FMCE",2.3);
+    addEdge(adj,26,28,"brabers",2.3);
+    addEdge(adj,27,29,"medical_center",3.4);
+    addEdge(adj,29,27,"Tuc",3.4);
+    addEdge(adj,28,30,"incubation_center",0.6);
+    addEdge(adj,30,28,"brabers",0.6);
+    addEdge(adj,30,29,"medical_center",1.4);
+    addEdge(adj,29,30,"incubation_center",1.4);
+    addEdge(adj,29,31,"hostel_7",0.4);
+    addEdge(adj,31,29,"medical_center",0.4);
+    addEdge(adj,29,32,"hostel_13",1.7);
+    addEdge(adj,32,29,"medical_center",1.7);
+    addEdge(adj,32,33,"faculty_club",4);
+    addEdge(adj,33,32,"hostel_13",4);
+    Node* root = NULL; // Declare the root
+    for(int i = 0; i < names.size(); i++) {
+        root = insert(root, names[i],i); // Insert the actual NAME string
+    }
+
+    // 2. User Input for Dijkstra
+    int source;
+    int destination; 
+    cout << "enter starting location(0-33): ";
+    cin >> source;
+    cout << "enter ending location(0-33): ";
+    cin >> destination;
+    // 3. Run Dijkstra
+    dijkstra(adj, names, source, destination);
+     //printGraph(adj,names);// will show how graph is working where each node is connected to where
+    cout<<endl;
+    cout<<" visual structure of tree "<<endl;
+    int count=0;
+    printLevelOrder(root);
+    history();
+    cout<<endl;
+    cout<<endl;
+    sortByDistance();
+    cout<<"history in asending order(Queue): "<<endl;
+    displayqueue();
+    cout<<endl;
+    cout<<"history in desending order(Stack): "<<endl;
+    stackdisplay();
+    return 0;
+}
